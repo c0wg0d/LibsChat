@@ -26,6 +26,10 @@
             <id>bukkit-repo</id>
             <url>http://repo.bukkit.org/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>pex-repo</id>
+            <url>http://pex-repo.zachsthings.com</url>
+        </repository>
     </repositories>
     
     <dependencies>
@@ -38,6 +42,11 @@
             <groupId>org.bukkit</groupId>
             <artifactId>craftbukkit</artifactId>
             <version>1.7.9-R0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>ru.tehkode</groupId>
+            <artifactId>PermissionsEx</artifactId>
+            <version>1.22</version>
         </dependency>
     </dependencies>
     
