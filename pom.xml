@@ -6,7 +6,7 @@
 
     <groupId>me.libraryaddict.Chat</groupId>
     <artifactId>LibsChat</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1</version>
 
     <build>
         <defaultGoal>clean install</defaultGoal>
@@ -30,6 +30,10 @@
             <id>pex-repo</id>
             <url>http://pex-repo.zachsthings.com</url>
         </repository>
+        <repository>
+            <id>sandlot-repo</id>
+            <url>http://server.sandlotminecraft.com:8081/nexus/content/repositories/thirdparty/</url>
+        </repository>
     </repositories>
     
     <dependencies>
@@ -47,6 +51,16 @@
             <groupId>ru.tehkode</groupId>
             <artifactId>PermissionsEx</artifactId>
             <version>1.22</version>
+        </dependency>
+        <dependency>
+            <groupId>me.zford</groupId>
+            <artifactId>Jobs</artifactId>
+            <version>2.11.4</version>
+        </dependency>
+        <dependency>
+            <groupId>me.libraryaddict</groupId>
+            <artifactId>LibsHungergames</artifactId>
+            <version>5.5.0</version>
         </dependency>
     </dependencies>
     
