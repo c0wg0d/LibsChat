@@ -1,7 +1,6 @@
 package me.libraryaddict.Chat.Commands;
 
 import me.libraryaddict.Chat.ChatManager;
-
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -23,7 +22,7 @@ public class Reply implements CommandExecutor {
             }
             manager.sendMessage(sender, manager.getOtherChatter(sender.getName()), StringUtils.join(args, " "));
         } else
-            sender.sendMessage(ChatColor.RED + "Nobody to reply to");
+            sender.sendMessage(ChatColor.RED + "Nobody to reply to.");
         return true;
     }
 }

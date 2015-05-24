@@ -1,12 +1,5 @@
 package me.libraryaddict.Chat;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.util.HashMap;
-import java.util.Set;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -15,11 +8,18 @@ import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.util.HashMap;
+import java.util.Set;
+
 public class ChatManager implements PluginMessageListener {
 
-    private HashMap<String, String> lastMsg = new HashMap<>();
+    private HashMap<String, String> lastMsg = new HashMap<String, String>();
     private Main main;
-    private HashMap<CommandSender, BukkitRunnable> noReplies = new HashMap<>();
+    private HashMap<CommandSender, BukkitRunnable> noReplies = new HashMap<CommandSender, BukkitRunnable>();
 
     public ChatManager(Main main) {
         this.main = main;
@@ -126,7 +126,7 @@ public class ChatManager implements PluginMessageListener {
             out.writeUTF("LibrarysMessage");
             out.writeShort(msgbytes.toByteArray().length);
             out.write(msgbytes.toByteArray());
-            Bukkit.getOnlinePlayers()[0].sendPluginMessage(main, "BungeeCord", b.toByteArray());
+            Bukkit.getOnlinePlayers().iterator().next().sendPluginMessage(main, "BungeeCord", b.toByteArray());
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -151,7 +151,7 @@ public class ChatManager implements PluginMessageListener {
             out.writeUTF("LibrarysMessage");
             out.writeShort(msgbytes.toByteArray().length);
             out.write(msgbytes.toByteArray());
-            Bukkit.getOnlinePlayers()[0].sendPluginMessage(main, "BungeeCord", b.toByteArray());
+            Bukkit.getOnlinePlayers().iterator().next().sendPluginMessage(main, "BungeeCord", b.toByteArray());
         } catch (Exception ex) {
             ex.printStackTrace();
         }

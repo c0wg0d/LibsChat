@@ -1,15 +1,6 @@
 package me.libraryaddict.Chat;
 
-import java.io.File;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
-
 import me.libraryaddict.Chat.Commands.*;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandExecutor;
@@ -22,6 +13,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Level;
 
 public class Main extends JavaPlugin {
 
@@ -57,13 +56,13 @@ public class Main extends JavaPlugin {
         }
     }
 
-    private ArrayList<ChatChannel> channels = new ArrayList<>();
+    private ArrayList<ChatChannel> channels = new ArrayList<ChatChannel>();
     private ChatManager chatManager = new ChatManager(this);
-    private Map<String, Map<String, Object>> commandsMap = new HashMap<>();
+    private Map<String, Map<String, Object>> commandsMap = new HashMap<String, Map<String, Object>>();
     private ChatChannel defaultChannel = null;
-    private HashMap<ChatChannel, List<Player>> players = new HashMap<>();
-    private HashMap<String, ChannelShortcut> shortcuts = new HashMap<>();
-    private List<Player> chatspies = new ArrayList<>();
+    private HashMap<ChatChannel, List<Player>> players = new HashMap<ChatChannel, List<Player>>();
+    private HashMap<String, ChannelShortcut> shortcuts = new HashMap<String, ChannelShortcut>();
+    private List<Player> chatspies = new ArrayList<Player>();
     private ChatChannel aliveChannel = null;
 
     public void addToChatSpies(Player player) {
@@ -123,7 +122,7 @@ public class Main extends JavaPlugin {
     }
 
     public void loadConfig() {
-        ArrayList<ChatChannel> newChannels = new ArrayList<>();
+        ArrayList<ChatChannel> newChannels = new ArrayList<ChatChannel>();
         saveDefaultConfig();
         YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "config.yml"));
         for (String key : config.getConfigurationSection("Channels").getKeys(false)) {
@@ -197,7 +196,7 @@ public class Main extends JavaPlugin {
                 if (commandName == null)
                     commandName = config.getName();
                 commandName = commandName.toLowerCase();
-                List<String> aliases = new ArrayList<>();
+                List<String> aliases = new ArrayList<String>();
                 if (config.contains("Aliases"))
                     aliases = config.getStringList("Aliases");
                 try {
@@ -234,7 +233,7 @@ public class Main extends JavaPlugin {
     }
 
     private void registerCommand(final String name, final CommandExecutor exc, final JavaPlugin plugin, List<String> aliases,
-            boolean isAlias) throws Exception {
+                                 boolean isAlias) throws Exception {
         String desc = null;
         if (!isAlias) {
             for (String alias : aliases) {
@@ -247,7 +246,7 @@ public class Main extends JavaPlugin {
             desc = ChatColor.translateAlternateColorCodes('&', (String) field.get(exc));
         } catch (Exception ex) {
         }
-        HashMap<String, Object> newMap = new HashMap<>();
+        HashMap<String, Object> newMap = new HashMap<String, Object>();
         if (desc != null) {
             newMap.put("description", desc);
         }

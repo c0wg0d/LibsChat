@@ -1,10 +1,11 @@
 package me.libraryaddict.Chat;
 
 import me.libraryaddict.Hungergames.Types.HungergamesApi;
-import me.zford.jobs.Jobs;
-import me.zford.jobs.container.JobsPlayer;
+import net.milkbowl.vault.chat.Chat;
+import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -13,8 +14,8 @@ import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.messaging.PluginMessageListener;
-import ru.tehkode.permissions.bukkit.PermissionsEx;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -27,11 +28,21 @@ public class ChannelListeners implements Listener, PluginMessageListener {
 
     private Main main;
 
+    public static Permission perms = null;
+    public static Chat chat = null;
+
+
     public ChannelListeners(Main main) {
         this.main = main;
     }
 
     private void chatChannel(ChatChannel channel, Player player, String format, String message, String shortcutMessage) {
+        RegisteredServiceProvider<Permission> rspp = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+        perms = rspp.getProvider();
+
+        RegisteredServiceProvider<Chat> rspc = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
+        chat = rspc.getProvider();
+
         String sender = (channel.useDisplayNames() ? player.getDisplayName() : player.getName());
         format = (channel.getFormat() != null ? channel.getFormat() : format);
         String spyformat = "";
@@ -39,19 +50,20 @@ public class ChannelListeners implements Listener, PluginMessageListener {
         if (channel.isCrossServer()) {
             sendData(channel.getName(), sender, format, spyformat, message);
         }
-        String formattedMessage = ChatColor.translateAlternateColorCodes('&', format.replace("{prefix}", PermissionsEx.getUser(player).getPrefix()).replace("{suffix}", PermissionsEx.getUser(player).getSuffix()).replace("{name}", sender).replace("{message}", message));
+        //String formattedMessage = ChatColor.translateAlternateColorCodes('&', format.replace("{prefix}", PermissionsEx.getUser(player).getPrefix()).replace("{suffix}", PermissionsEx.getUser(player).getSuffix()).replace("{name}", sender).replace("{message}", message));
+        String formattedMessage = ChatColor.translateAlternateColorCodes('&', format.replace("{prefix}", chat.getPlayerPrefix(player)).replace("{suffix}", chat.getPlayerSuffix(player)).replace("{name}", sender));
 
         if (format.contains("{jobs}")) {
             String jobtitle = "&aEasy";
-
-            if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
-            //if (Bukkit.getPluginManager().getPlugin("Jobs").isEnabled()) {
-                JobsPlayer jPlayer = Jobs.getPlayerManager().getJobsPlayer(sender);
-                if (jPlayer != null)
-                    jobtitle = jPlayer.getDisplayHonorific();
-                if (jobtitle.isEmpty())
-                    jobtitle = "&8Unemployed";
-            }
+//
+//            if (Bukkit.getPluginManager().isPluginEnabled("Jobs")) {
+//            //if (Bukkit.getPluginManager().getPlugin("Jobs").isEnabled()) {
+//                JobsPlayer jPlayer = Jobs.getPlayerManager().getJobsPlayer(player);
+//                if (jPlayer != null)
+//                    jobtitle = jPlayer.getDisplayHonorific();
+//                if (jobtitle.isEmpty())
+//                    jobtitle = "&8Unemployed";
+//            }
             formattedMessage = ChatColor.translateAlternateColorCodes('&', formattedMessage.replace("{jobs}", jobtitle));
         }
 
@@ -61,7 +73,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
 
             for (Map<?, ?> titleList : channel.channelTitles) {
                 for (Map.Entry<?, ?> title : titleList.entrySet()) {
-                    if (PermissionsEx.getUser(player).has("rank." + title.getKey())) {
+                    if (perms.playerHas(player, "rank." + title.getKey())) {
                         formattedMessage = ChatColor.translateAlternateColorCodes('&', formattedMessage.replace("{title}", title.getValue().toString()));
                         titleFound = true;
                     } else if (title.getKey().equals("default")) {
@@ -74,10 +86,13 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             }
         }
 
+        formattedMessage = formattedMessage.replace("{message}", message);
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (channel.getRadius() < 0 || p.getLocation().distance(player.getLocation()) <= channel.getRadius()) {
                 if (main.isChatSpy(p)) {
-                    String spyMessage = spyformat.replace("{prefix}", PermissionsEx.getUser(player).getPrefix()).replace("{suffix}", PermissionsEx.getUser(player).getSuffix()).replace("{name}", sender).replace("{message}", message);
+                    //String spyMessage = spyformat.replace("{prefix}", PermissionsEx.getUser(player).getPrefix()).replace("{suffix}", PermissionsEx.getUser(player).getSuffix()).replace("{name}", sender).replace("{message}", message);
+                    String spyMessage = spyformat.replace("{prefix}", chat.getPlayerPrefix(player)).replace("{suffix}", chat.getPlayerSuffix(player)).replace("{name}", sender).replace("{message}", message);
                     spyMessage = ChatColor.translateAlternateColorCodes('&', spyMessage);
                     p.sendMessage(spyMessage);
                 } else if (Bukkit.getPluginManager().isPluginEnabled("LibsHungergames")) {
@@ -87,7 +102,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
                         p.sendMessage(formattedMessage);
                     }
                 } else if (main.getChatChannel(p) == channel
-                            || (channel.useHearPermission() && p.hasPermission(channel.getPermissionToHear()))) {
+                        || (channel.useHearPermission() && p.hasPermission(channel.getPermissionToHear()))) {
                     p.sendMessage(formattedMessage);
                 } else {
                     if (p == player && shortcutMessage != null) {
@@ -99,9 +114,14 @@ public class ChannelListeners implements Listener, PluginMessageListener {
         System.out.print(formattedMessage);
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     @EventHandler(priority = EventPriority.MONITOR)
     public void onChat(@SuppressWarnings("deprecation") PlayerChatEvent event) {
+        RegisteredServiceProvider<Permission> rspp = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+        perms = rspp.getProvider();
+
+        RegisteredServiceProvider<Chat> rspc = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
+        chat = rspc.getProvider();
+
         if (event.isCancelled() || event.getRecipients().isEmpty())
             return;
         ChatChannel channel = main.getChatChannel(event.getPlayer());
@@ -125,7 +145,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
         if (channel != null) {
             event.setCancelled(true);
             if (event.getMessage().trim().length() <= 0) {
-                event.getPlayer().sendMessage(ChatColor.RED + "You cannot send a empty message");
+                event.getPlayer().sendMessage(ChatColor.RED + "You cannot send an empty message!");
                 return;
             }
             chatChannel(channel, event.getPlayer(), event.getFormat(), event.getMessage(),
@@ -133,19 +153,24 @@ public class ChannelListeners implements Listener, PluginMessageListener {
         }
     }
 
-    @SuppressWarnings("UnusedDeclaration")
     @EventHandler(priority = EventPriority.MONITOR)
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        RegisteredServiceProvider<Permission> rspp = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+        perms = rspp.getProvider();
+
+        RegisteredServiceProvider<Chat> rspc = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
+        chat = rspc.getProvider();
+
         Main.ChannelShortcut shortcut = main.getShortcut(event.getMessage());
         if (shortcut != null && !event.isCancelled()) {
             event.setCancelled(true);
-            if (shortcut.getPermission() != null && !event.getPlayer().hasPermission(shortcut.getPermission())) {
+            if (shortcut.getPermission() != null && !perms.has(event.getPlayer(), shortcut.getPermission())) {
                 event.getPlayer().sendMessage(ChatColor.RED + "You do not have access to this channel!");
                 return;
             }
             String msg = event.getMessage().substring(shortcut.getKey().length());
             if (msg.length() == 0) {
-                event.getPlayer().sendMessage(ChatColor.RED + "You cannot send a empty message!");
+                event.getPlayer().sendMessage(ChatColor.RED + "You cannot send an empty message!");
                 return;
             }
             @SuppressWarnings({"deprecation", "unchecked"}) PlayerChatEvent chatEvent = new PlayerChatEvent(event.getPlayer(), msg, "<%s> %s", new HashSet());
@@ -159,10 +184,13 @@ public class ChannelListeners implements Listener, PluginMessageListener {
     @SuppressWarnings("UnusedDeclaration")
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        RegisteredServiceProvider<Permission> rspp = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+        perms = rspp.getProvider();
+
         if (main.getDefaultChannel() != null) {
             main.addToChannel(main.getDefaultChannel(), event.getPlayer());
         }
-        if (PermissionsEx.getUser(event.getPlayer()).has("group.moderator") && !main.isChatSpy(event.getPlayer()))
+        if ((perms.has(event.getPlayer(), "channel.admin.*")) && !main.isChatSpy(event.getPlayer()))
             main.addToChatSpies(event.getPlayer());
     }
 
@@ -173,6 +201,11 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             // This is not the channel we are looking for..
         }
         try {
+            RegisteredServiceProvider<Permission> rspp = Bukkit.getServer().getServicesManager().getRegistration(Permission.class);
+            perms = rspp.getProvider();
+
+            RegisteredServiceProvider<Chat> rspc = Bukkit.getServer().getServicesManager().getRegistration(Chat.class);
+            chat = rspc.getProvider();
 
             DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes));
             String subchannel = in.readUTF();
@@ -183,6 +216,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             if (subchannel.equals("LibrarysChat")) {
                 long timestamp = msgin.readLong();
                 if (timestamp >= System.currentTimeMillis()) {
+
                     String channelName = msgin.readUTF();
                     String sender = msgin.readUTF();
                     String format = msgin.readUTF();
@@ -190,17 +224,24 @@ public class ChannelListeners implements Listener, PluginMessageListener {
                     String message = msgin.readUTF();
                     for (ChatChannel channel : main.getChannels()) {
                         if (channel.getName().equals(channelName) && channel.isCrossServer()) {
-                            String chatMessage = format.replace("{prefix}", PermissionsEx.getUser(sender).getPrefix())
-                                .replace("{suffix}", PermissionsEx.getUser(sender).getSuffix())
-                                .replace("{name}", sender)
-                                .replace("{message}", message)
-                                .replace("{title}", "")
-                                .replace("{jobs}", "&aEasy");
+                            OfflinePlayer player1 = Bukkit.getOfflinePlayer(sender);
+                            String prefix = "";
+                            String suffix = "";
+                            if (player1 != null) {
+                                prefix = chat.getPlayerPrefix(null, player1);
+                                suffix = chat.getPlayerSuffix(null, player1);
+                            }
+                            String chatMessage = format.replace("{prefix}", prefix)
+                                    .replace("{suffix}", suffix)
+                                    .replace("{name}", sender)
+                                    .replace("{message}", message)
+                                    .replace("{title}", "")
+                                    .replace("{jobs}", "&aEasy");
                             chatMessage = ChatColor.translateAlternateColorCodes('&', chatMessage);
                             for (Player player : Bukkit.getOnlinePlayers()) {
                                 if (main.isChatSpy(player)) {
-                                    String spyMessage = spyformat.replace("{prefix}", PermissionsEx.getUser(sender).getPrefix())
-                                            .replace("{suffix}", PermissionsEx.getUser(sender).getSuffix())
+                                    String spyMessage = spyformat.replace("{prefix}", prefix)
+                                            .replace("{suffix}", suffix)
                                             .replace("{name}", sender)
                                             .replace("{message}", message);
                                     spyMessage = ChatColor.translateAlternateColorCodes('&', spyMessage);
@@ -248,7 +289,7 @@ public class ChannelListeners implements Listener, PluginMessageListener {
             msgout.writeUTF(message);
             out.writeShort(msgbytes.toByteArray().length);
             out.write(msgbytes.toByteArray());
-            Bukkit.getOnlinePlayers()[0].sendPluginMessage(main, "BungeeCord", b.toByteArray());
+            Bukkit.getOnlinePlayers().iterator().next().sendPluginMessage(main, "BungeeCord", b.toByteArray());
         } catch (Exception ex) {
             ex.printStackTrace();
         }

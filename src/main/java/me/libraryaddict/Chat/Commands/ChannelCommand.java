@@ -1,17 +1,16 @@
 package me.libraryaddict.Chat.Commands;
 
-import java.util.ArrayList;
-import java.util.Collections;
-
 import me.libraryaddict.Chat.ChatChannel;
 import me.libraryaddict.Chat.Main;
-
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class ChannelCommand implements CommandExecutor {
     private String commandName;
@@ -65,7 +64,7 @@ public class ChannelCommand implements CommandExecutor {
                     sender.sendMessage(ChatColor.RED + "Left channel " + leaving.getName());
                 }
             } else if (args[0].equalsIgnoreCase("list")) {
-                ArrayList<String> channelNames = new ArrayList<>();
+                ArrayList<String> channelNames = new ArrayList<String>();
                 for (ChatChannel channel : main.getChannels()) {
                     if (!channel.useJoinPermission() || sender.hasPermission(channel.getPermissionToJoin()))
                         channelNames.add(channel.getName());
